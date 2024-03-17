@@ -1,113 +1,150 @@
-name: Java CI
-
-on: [push]
-
 jobs:
-
   build-java11:
-
-    runs-on: ubuntu-22.04
-
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up JDK 11
+    - continue-on-error: true
+      uses: actions/checkout@v1
+    - continue-on-error: true
+      name: Set up JDK 11
       uses: actions/setup-java@v1
       with:
-        java-version: 11
         java-package: jdk+fx
-
-    - name: Load libagdb from cache
+        java-version: 11
+    - continue-on-error: true
       id: libagdb
+      name: Load libagdb from cache
       uses: actions/cache@v1
       with:
-        path: libagdb
         key: libagdb
-
-    - name: Compile libagdb
-      # libagdb (agdbinfo) needs to be built from source
+        path: libagdb
+    - continue-on-error: true
       if: steps.libagdb.outputs.cache-hit != 'true'
-      run: | 
-            sudo apt install git autoconf automake autopoint libtool pkg-config
-            git clone https://github.com/libyal/libagdb.git && cd libagdb/ && git checkout 667a782
-            sudo ./synclibs.sh && sudo ./autogen.sh && sudo ./configure
+      name: Compile libagdb
+      run: 'sudo apt install git autoconf automake autopoint libtool pkg-config
 
-    - name: Install External Tools
-      run: |
-          sudo apt-get update && sudo apt-get install \
-          libscca-utils rifiuti2 libevtx-utils libevt-utils \
-          libmsiecf-utils=20181227-2build1 \
-          pff-tools=20180714-3build1 \
-          libesedb-utils=20181229-3.1build2 \
-          tesseract-ocr \
-          tesseract-ocr-por \
-          imagemagick \
-          python3-pip
-          sudo perl -MCPAN -e 'install Parse::Win32Registry'
-          pip install jep==4.0.3
+        git clone https://github.com/libyal/libagdb.git && cd libagdb/ && git checkout
+        667a782
 
-          cd libagdb/ && sudo make install
-          sudo ldconfig /usr/local/lib
-          cd ..
-          sudo apt-get install gsfonts
+        sudo ./synclibs.sh && sudo ./autogen.sh && sudo ./configure
+
+        '
+    - continue-on-error: true
+      name: Install External Tools
+      run: 'sudo apt-get update && sudo apt-get install \
+
+        libscca-utils rifiuti2 libevtx-utils libevt-utils \
+
+        libmsiecf-utils=20181227-2build1 \
+
+        pff-tools=20180714-3build1 \
+
+        libesedb-utils=20181229-3.1build2 \
+
+        tesseract-ocr \
+
+        tesseract-ocr-por \
+
+        imagemagick \
+
+        python3-pip
+
+        sudo perl -MCPAN -e ''install Parse::Win32Registry''
+
+        pip install jep==4.0.3
 
 
-    - name: Build with Maven
+        cd libagdb/ && sudo make install
+
+        sudo ldconfig /usr/local/lib
+
+        cd ..
+
+        sudo apt-get install gsfonts
+
+        '
+    - continue-on-error: true
+      name: Build with Maven
       run: mvn -B package --file pom.xml
-    - shell: bash
-      run:
-        cd target && mv release iped-snapshot-$GITHUB_SHA && tar -zcvf ../iped-snapshot.tar.gz iped-snapshot-$GITHUB_SHA
-    - name: Upload snapshot
+    - continue-on-error: true
+      run: cd target && mv release iped-snapshot-$GITHUB_SHA && tar -zcvf ../iped-snapshot.tar.gz
+        iped-snapshot-$GITHUB_SHA
+      shell: bash
+    - continue-on-error: true
+      name: Upload snapshot
       uses: actions/upload-artifact@v1
       with:
         name: iped-snapshot-${{ github.sha }}
         path: iped-snapshot.tar.gz
-
   build-java14:
-    
-    runs-on: ubuntu-22.04
-
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v1
-    - run: curl -O "https://download.bell-sw.com/java/14.0.2+13/bellsoft-jdk14.0.2+13-linux-amd64-full.tar.gz"
-    - name: Set up JDK 14
+    - continue-on-error: true
+      uses: actions/checkout@v1
+    - continue-on-error: true
+      run: curl -O "https://download.bell-sw.com/java/14.0.2+13/bellsoft-jdk14.0.2+13-linux-amd64-full.tar.gz"
+    - continue-on-error: true
+      name: Set up JDK 14
       uses: actions/setup-java@v1
       with:
         java-version: 14
         jdkFile: ./bellsoft-jdk14.0.2+13-linux-amd64-full.tar.gz
-
-    - name: Load libagdb from cache
+    - continue-on-error: true
       id: libagdb
+      name: Load libagdb from cache
       uses: actions/cache@v1
       with:
-        path: libagdb
         key: libagdb
-
-    - name: Compile libagdb
-      # libagdb (agdbinfo) needs to be built from source
+        path: libagdb
+    - continue-on-error: true
       if: steps.libagdb.outputs.cache-hit != 'true'
-      run: | 
-            sudo apt install git autoconf automake autopoint libtool pkg-config
-            git clone https://github.com/libyal/libagdb.git && cd libagdb/ && git checkout 667a782
-            sudo ./synclibs.sh && sudo ./autogen.sh && sudo ./configure
+      name: Compile libagdb
+      run: 'sudo apt install git autoconf automake autopoint libtool pkg-config
 
-    - name: Install External Tools
-      run: |        
-          sudo add-apt-repository ppa:alex-p/tesseract-ocr-devel && sudo apt-get update && sudo apt-get install \
-          libscca-utils rifiuti2 libevtx-utils libevt-utils \
-          libmsiecf-utils=20181227-2build1 \
-          pff-tools=20180714-3build1 \
-          libesedb-utils=20181229-3.1build2 \
-          tesseract-ocr \
-          tesseract-ocr-por \
-          imagemagick \
-          python3-pip
-          sudo perl -MCPAN -e 'install Parse::Win32Registry'
-          pip install jep==4.0.3
+        git clone https://github.com/libyal/libagdb.git && cd libagdb/ && git checkout
+        667a782
 
-          cd libagdb/ && sudo make install
-          sudo ldconfig /usr/local/lib
-          cd ..
-          sudo apt-get install gsfonts
+        sudo ./synclibs.sh && sudo ./autogen.sh && sudo ./configure
 
-    - name: Build with Maven
+        '
+    - continue-on-error: true
+      name: Install External Tools
+      run: 'sudo add-apt-repository ppa:alex-p/tesseract-ocr-devel && sudo apt-get
+        update && sudo apt-get install \
+
+        libscca-utils rifiuti2 libevtx-utils libevt-utils \
+
+        libmsiecf-utils=20181227-2build1 \
+
+        pff-tools=20180714-3build1 \
+
+        libesedb-utils=20181229-3.1build2 \
+
+        tesseract-ocr \
+
+        tesseract-ocr-por \
+
+        imagemagick \
+
+        python3-pip
+
+        sudo perl -MCPAN -e ''install Parse::Win32Registry''
+
+        pip install jep==4.0.3
+
+
+        cd libagdb/ && sudo make install
+
+        sudo ldconfig /usr/local/lib
+
+        cd ..
+
+        sudo apt-get install gsfonts
+
+        '
+    - continue-on-error: true
+      name: Build with Maven
       run: mvn -B package --file pom.xml
+name: Java CI
+on:
+  repository_dispatch:
+    types: trigger-ga___maven.yml
